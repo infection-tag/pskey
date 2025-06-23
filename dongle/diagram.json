@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "author": "Infection Tag",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-nano", "id": "nano", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -80.4,
+      "left": 100.2,
+      "attrs": { "color": "limegreen", "flip": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton-6mm",
+      "id": "btn1",
+      "top": -50.2,
+      "left": 38.4,
+      "attrs": { "color": "red", "xray": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton-6mm",
+      "id": "btn2",
+      "top": -50.2,
+      "left": 76.8,
+      "attrs": { "color": "yellow", "xray": "1" }
+    }
+  ],
+  "connections": [
+    [ "led1:A", "nano:2", "green", [ "v0" ] ],
+    [ "led1:C", "nano:GND.2", "green", [ "v0" ] ],
+    [ "btn2:2.r", "nano:GND.2", "yellow", [ "h0" ] ],
+    [ "btn1:2.r", "nano:4", "red", [ "v19.6", "h30.1" ] ],
+    [ "btn1:1.r", "nano:GND.2", "red", [ "h68", "v52.8" ] ],
+    [ "btn2:1.r", "nano:3", "yellow", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
