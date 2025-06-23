@@ -18,3 +18,7 @@ PSP_EBOOT_TITLE = HelloWorld
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.make
+
+CFLAGS = -I./lib
+
+OBJS = src/main.o lib/psp_scom.o

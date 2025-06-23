@@ -1,24 +1,46 @@
 #include <pspkernel.h>
 #include <pspdebug.h>
-#include <pspdisplay.h>
-#include "./common/callback.h"
+#include <pspctrl.h>
+#include "../lib/psp_scom.h"
+
+PSP_MODULE_INFO("PSKey", 0, 1, 0);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 #define printf pspDebugScreenPrintf
 
-PSP_MODULE_INFO("HelloWorld", PSP_MODULE_USER, 1, 0);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER); 
-PSP_HEAP_SIZE_MAX();
+void sendSerialCommand(const char *command) {
+    printf("Sent: %s\n", command);
+}
 
-int main() {       
-	pspDebugScreenInit();
-	setupExitCallback();
+int main() {
+    pspDebugScreenInit();
+    sceCtrlSetSamplingCycle(0);
+    sceCtrlSetSamplingMode(PSP_CTRL_MODE_DIGITAL);
 
-	while (isRunning()) {
-		pspDebugScreenSetXY(0, 0);
-		printf("Hello World!");
-		sceDisplayWaitVblankStart();
-	}
+    printf("PSKey Ready\n");
 
-	sceKernelExitGame();	
-	return 0;
+    while (1) {
+        SceCtrlData pad;
+        sceCtrlReadBufferPositive(&pad, 1);
+
+		/* Start reading inputs from the PSP */
+
+        if (pad.Buttons & PSP_CTRL_CROSS) {
+            sendSerialCommand("START_READ\n");
+        } else if (pad.Buttons & PSP_CTRL_CIRCLE) {
+            sendSerialCommand("STOP_READ\n");
+        } else if (pad.Buttons & PSP_CTRL_TRIANGLE) {
+            sendSerialCommand("SAVE\n");
+        } else if (pad.Buttons & PSP_CTRL_SQUARE) {
+            sendSerialCommand("TX:01\n");
+        } else if (pad.Buttons & PSP_CTRL_START) {
+            printf("Exiting PSKey...\n");
+            sceKernelDelayThread(1000000);
+            sceKernelExitGame();
+        }
+
+        sceKernelDelayThread(10000); /* Debounce */
+    }
+
+    return 0;
 }
