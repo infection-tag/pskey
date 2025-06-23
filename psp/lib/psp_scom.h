@@ -10,6 +10,9 @@ void serial_send(const char *cmd);
 /* Reads a line from the dongle (blocking read) */
 void serial_read_line(char *buffer, int maxLen);
 
+/* Starts the serial listener thread */
+int start_serial_listener();
+
 /* PSKey serial command functions */
 void start_read();
 void stop_read();

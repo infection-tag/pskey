@@ -1,18 +1,21 @@
 #include <pspkernel.h>
 #include <pspdebug.h>
 #include <pspiofilemgr.h>
+#include <pspthreadman.h>
 #include <string.h>
 #include <stdio.h>
 
 #include "psp_scom.h"
 
-#define SERIAL_PORT "flash0:/pspserial0"  // Update when you know the device path
+#define SERIAL_PORT "flash0:/pspserial0" /* TODO: Update when you know the device path */
 #define SERIAL_BAUDRATE 9600
 
 #define printf pspDebugScreenPrintf
 
 int serial_fd = -1;
+int serial_thread_id = -1;
 
+/* Serial initialization */
 int serial_init() {
     serial_fd = sceIoOpen(SERIAL_PORT, PSP_O_RDWR, 0777);
     if (serial_fd < 0) {
@@ -24,6 +27,7 @@ int serial_init() {
     return 0;
 }
 
+/* Send command to dongle */
 void serial_send(const char *cmd) {
     if (serial_fd >= 0) {
         sceIoWrite(serial_fd, cmd, strlen(cmd));
@@ -33,6 +37,7 @@ void serial_send(const char *cmd) {
     }
 }
 
+/* Read one line from dongle */
 void serial_read_line(char *buffer, int maxLen) {
     if (serial_fd < 0) return;
 
@@ -49,7 +54,36 @@ void serial_read_line(char *buffer, int maxLen) {
     buffer[idx] = '\0';
 }
 
-// PSKey commands
+/* Serial listening thread */
+int serial_listener_thread(SceSize args, void *argp) {
+    char buffer[128];
+
+    while (1) {
+        serial_read_line(buffer, sizeof(buffer));
+        if (strlen(buffer) > 0) {
+            printf("Dongle: %s\n", buffer);
+        }
+
+        sceKernelDelayThread(1000); /* 1 ms delay to prevent CPU lock */
+    }
+
+    return 0;
+}
+
+/* Start the serial listener thread */
+int start_serial_listener() {
+    serial_thread_id = sceKernelCreateThread("SerialListener", serial_listener_thread, 0x11, 0x1000, 0, NULL);
+    if (serial_thread_id >= 0) {
+        sceKernelStartThread(serial_thread_id, 0, NULL);
+        printf("Serial listener started.\n");
+        return 0;
+    } else {
+        printf("Failed to start serial listener.\n");
+        return -1;
+    }
+}
+
+/* PSKey serial commands */
 void start_read() {
     serial_send("START_READ\n");
 }

@@ -1,7 +1,6 @@
 #include <pspkernel.h>
 #include <pspdebug.h>
 #include <pspctrl.h>
-#include "../lib/psp_scom.h"
 
 PSP_MODULE_INFO("PSKey", 0, 1, 0);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
@@ -19,27 +18,30 @@ int main() {
 
     printf("PSKey Ready\n");
 
+    /* Initialize serial and start listener */
+    if (serial_init() == 0) {
+        start_serial_listener();
+    }
+
     while (1) {
         SceCtrlData pad;
         sceCtrlReadBufferPositive(&pad, 1);
 
-		/* Start reading inputs from the PSP */
-
         if (pad.Buttons & PSP_CTRL_CROSS) {
-            sendSerialCommand("START_READ\n");
+            start_read();
         } else if (pad.Buttons & PSP_CTRL_CIRCLE) {
-            sendSerialCommand("STOP_READ\n");
+            stop_read();
         } else if (pad.Buttons & PSP_CTRL_TRIANGLE) {
-            sendSerialCommand("SAVE\n");
+            send_signal();
         } else if (pad.Buttons & PSP_CTRL_SQUARE) {
-            sendSerialCommand("TX:01\n");
+            transmit_signal("01");
         } else if (pad.Buttons & PSP_CTRL_START) {
             printf("Exiting PSKey...\n");
             sceKernelDelayThread(1000000);
             sceKernelExitGame();
         }
 
-        sceKernelDelayThread(10000); /* Debounce */
+        sceKernelDelayThread(10000); /* 10 ms delay to debounce buttons */
     }
 
     return 0;
